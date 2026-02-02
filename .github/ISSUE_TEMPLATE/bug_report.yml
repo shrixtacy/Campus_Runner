@@ -1,5 +1,5 @@
 name: "🐛 Bug Report"
-description: Report a bug or issue with the RunAnywhere SDKs
+description: Report a bug or issue 
 title: "[Bug]: "
 labels: ["bug"]
 body:
