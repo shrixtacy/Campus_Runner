@@ -1,8 +1,8 @@
-import 'dart:io'; 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:file_picker/file_picker.dart'; 
+import 'package:file_picker/file_picker.dart';
 import 'package:uuid/uuid.dart'; // <<<--- MISSING IMPORT ADDED HERE
 
 // Project Imports
@@ -11,25 +11,26 @@ import '../../widgets/inputs/primary_button.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/models/task_model.dart';
 import '../../../logic/task_provider.dart';
-import '../../../logic/storage_provider.dart'; 
+import '../../../logic/storage_provider.dart';
 
 // 1. Change to ConsumerStatefulWidget
 class RequesterHomeScreen extends ConsumerStatefulWidget {
   const RequesterHomeScreen({super.key});
 
   @override
-  ConsumerState<RequesterHomeScreen> createState() => _RequesterHomeScreenState();
+  ConsumerState<RequesterHomeScreen> createState() =>
+      _RequesterHomeScreenState();
 }
 
 class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // State variables for form fields
   String? _selectedPickup;
   String? _selectedDrop;
   final TextEditingController _itemController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  
+
   // State variables for file picker
   File? _selectedFile;
   String? _fileName;
@@ -53,7 +54,7 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
 
     if (result != null) {
       // NOTE: We need the 'dart:io' import for the File object
-      final file = File(result.files.single.path!); 
+      final file = File(result.files.single.path!);
       setState(() {
         _selectedFile = file;
         _fileName = result.files.single.name;
@@ -65,30 +66,33 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
   void _postTask() async {
     // Check if a file is required and present
     if (_selectedFile == null) {
-       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please select a PDF file to print.")),
-        );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select a PDF file to print.")),
+      );
       return;
     }
-    
+
     if (_formKey.currentState!.validate()) {
-      setState(() => _isUploading = true); 
+      setState(() => _isUploading = true);
 
       try {
         // --- STEP 1: UPLOAD FILE TO STORAGE ---
         final storageRepo = ref.read(storageRepositoryProvider);
         // Use Uuid() here to generate a secure, unique folder name
-        final uniqueFileName = '${DateTime.now().millisecondsSinceEpoch}_$_fileName';
+        final uniqueFileName =
+            '${DateTime.now().millisecondsSinceEpoch}_$_fileName';
         final storagePath = 'tasks/${const Uuid().v4()}/$uniqueFileName';
-        
-        // Get the final permanent URL
-        final fileUrl = await storageRepo.uploadFile(_selectedFile!, storagePath);
 
+        // Get the final permanent URL
+        final fileUrl = await storageRepo.uploadFile(
+          _selectedFile!,
+          storagePath,
+        );
 
         // --- STEP 2: SAVE TASK WITH URL TO FIRESTORE ---
         final newTask = TaskModel(
-          id: '', 
-          requesterId: 'TEMP_USER_ID', 
+          id: '',
+          requesterId: 'TEMP_USER_ID',
           title: _itemController.text,
           pickup: _selectedPickup!,
           drop: _selectedDrop!,
@@ -102,13 +106,18 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Task Posted Successfully! File Uploaded!")),
+            const SnackBar(
+              content: Text("Task Posted Successfully! File Uploaded!"),
+            ),
           );
-          Navigator.pop(context); 
+          Navigator.pop(context);
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Upload Error: ${e.toString()}"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("Upload Error: ${e.toString()}"),
+            backgroundColor: Colors.red,
+          ),
         );
       } finally {
         if (mounted) setState(() => _isUploading = false);
@@ -136,29 +145,37 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
               // --- LOCATION DROPDOWNS ---
               _buildSectionTitle("Where to go?"),
               const SizedBox(height: 12),
-              
+
               DropdownButtonFormField<String>(
-                value: _selectedPickup,
-                decoration: _inputDecoration("Pickup Location", PhosphorIcons.storefront()),
+                initialValue: _selectedPickup,
+                decoration: _inputDecoration(
+                  "Pickup Location",
+                  PhosphorIcons.storefront(),
+                ),
                 items: AppConstants.pickupZones.map((zone) {
                   return DropdownMenuItem(value: zone, child: Text(zone));
                 }).toList(),
                 onChanged: (val) => setState(() => _selectedPickup = val),
-                validator: (val) => AppValidators.validateRequired(val, "Pickup"),
+                validator: (val) =>
+                    AppValidators.validateRequired(val, "Pickup"),
               ),
-              
+
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedDrop,
-                decoration: _inputDecoration("Drop Location", PhosphorIcons.mapPin()),
+                initialValue: _selectedDrop,
+                decoration: _inputDecoration(
+                  "Drop Location",
+                  PhosphorIcons.mapPin(),
+                ),
                 items: AppConstants.dropZones.map((zone) {
                   return DropdownMenuItem(value: zone, child: Text(zone));
                 }).toList(),
                 onChanged: (val) => setState(() => _selectedDrop = val),
-                validator: (val) => AppValidators.validateRequired(val, "Drop location"),
+                validator: (val) =>
+                    AppValidators.validateRequired(val, "Drop location"),
               ),
-              // --- END LOCATION DROPDOWNS ---
 
+              // --- END LOCATION DROPDOWNS ---
               const SizedBox(height: 24),
               _buildSectionTitle("What do you need?"),
               const SizedBox(height: 12),
@@ -166,8 +183,12 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
               // ITEM NAME
               TextFormField(
                 controller: _itemController,
-                decoration: _inputDecoration("e.g. Printing a 10-page doc", PhosphorIcons.shoppingBag()),
-                validator: (val) => AppValidators.validateRequired(val, "Item name"),
+                decoration: _inputDecoration(
+                  "e.g. Printing a 10-page doc",
+                  PhosphorIcons.shoppingBag(),
+                ),
+                validator: (val) =>
+                    AppValidators.validateRequired(val, "Item name"),
               ),
 
               const SizedBox(height: 24),
@@ -181,20 +202,24 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
                 onPressed: _pickFile,
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  side: BorderSide(color: _selectedFile != null ? Colors.green : Colors.grey),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  side: BorderSide(
+                    color: _selectedFile != null ? Colors.green : Colors.grey,
+                  ),
                 ),
               ),
               if (_selectedFile != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
-                    "File Ready: $_fileName", 
+                    "File Ready: $_fileName",
                     style: const TextStyle(color: Colors.green, fontSize: 13),
                   ),
                 ),
+
               // --- END FILE PICKER UI ---
-              
               const SizedBox(height: 24),
               _buildSectionTitle("Runner Fee (Tip)"),
               const SizedBox(height: 12),
@@ -203,10 +228,13 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
               TextFormField(
                 controller: _priceController,
                 keyboardType: TextInputType.number,
-                decoration: _inputDecoration("₹20", PhosphorIcons.currencyInr()),
+                decoration: _inputDecoration(
+                  "₹20",
+                  PhosphorIcons.currencyInr(),
+                ),
                 validator: AppValidators.validatePrice,
               ),
-              
+
               const SizedBox(height: 8),
               Text(
                 "Suggested: ₹20 for nearby, ₹40 for far hostels.",
@@ -230,7 +258,7 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
 
   // --- HELPER FUNCTIONS ---
   InputDecoration _inputDecoration(String hint, IconData icon) {
-     return InputDecoration(
+    return InputDecoration(
       prefixIcon: Icon(icon),
       hintText: hint,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

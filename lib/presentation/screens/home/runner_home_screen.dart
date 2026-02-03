@@ -7,7 +7,6 @@ import 'package:url_launcher/url_launcher.dart'; // REQUIRED FOR PDF VIEWER
 
 // Project Imports
 import '../../../logic/task_provider.dart';
-import '../../../data/models/task_model.dart';
 import '../../../core/utils/formatters.dart';
 import '../../widgets/cards/task_card.dart';
 import 'requester_home_screen.dart';
@@ -29,7 +28,10 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open document."), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text("Could not open document."),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -44,14 +46,8 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
         title: const Text("Available Tasks"),
         centerTitle: false,
         actions: [
-          IconButton(
-            onPressed: () {}, 
-            icon: Icon(PhosphorIcons.funnel()),
-          ),
-          IconButton(
-            onPressed: () {}, 
-            icon: Icon(PhosphorIcons.bell()),
-          ),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel())),
+          IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell())),
         ],
       ),
 
@@ -90,9 +86,8 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
         ),
 
         // B. ERROR STATE
-        error: (err, stack) => Center(
-          child: Text("Error loading tasks: ${err.toString()}"),
-        ),
+        error: (err, stack) =>
+            Center(child: Text("Error loading tasks: ${err.toString()}")),
 
         // C. DATA STATE
         data: (tasks) {
@@ -118,7 +113,7 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
             itemCount: tasks.length,
             itemBuilder: (context, index) {
               final task = tasks[index];
-              
+
               // We use a Column to stack the card and the action button
               return Column(
                 children: [
@@ -130,7 +125,7 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                     price: "₹${task.price}",
                     time: AppFormatters.formatTimeAgo(task.createdAt),
                   ),
-                  
+
                   // 2. Action Buttons (New Row for File View and Acceptance)
                   Container(
                     margin: const EdgeInsets.only(bottom: 24),
@@ -140,12 +135,17 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                         if (task.fileUrl != null)
                           Expanded(
                             child: OutlinedButton.icon(
-                              onPressed: () => _launchDocument(task.fileUrl!, context),
-                              icon:  Icon(PhosphorIcons.filePdf()),
+                              onPressed: () =>
+                                  _launchDocument(task.fileUrl!, context),
+                              icon: Icon(PhosphorIcons.filePdf()),
                               label: const Text("View Document"),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Theme.of(context).colorScheme.primary,
-                                side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                side: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                               ),
                             ),
                           ),
@@ -161,26 +161,35 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                               onPressed: () async {
                                 // Call the Repository to update status to IN_PROGRESS
                                 try {
-                                  await ref.read(taskRepositoryProvider).updateTaskStatus(task.id, 'IN_PROGRESS');
-                                  
+                                  await ref
+                                      .read(taskRepositoryProvider)
+                                      .updateTaskStatus(task.id, 'IN_PROGRESS');
+
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text("Task Accepted! Go get it!"),
+                                        content: Text(
+                                          "Task Accepted! Go get it!",
+                                        ),
                                         backgroundColor: Colors.black,
                                       ),
                                     );
                                   }
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text("Error accepting task: $e"), backgroundColor: Colors.red),
+                                    SnackBar(
+                                      content: Text("Error accepting task: $e"),
+                                      backgroundColor: Colors.red,
+                                    ),
                                   );
                                 }
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.black87,
                                 foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               icon: const Icon(Icons.check_circle, size: 18),
                               label: const Text("Accept"),
@@ -190,10 +199,7 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                     ),
                   ),
                 ],
-              )
-              .animate()
-              .fade(duration: 300.ms)
-              .slideY(begin: 0.1, end: 0); 
+              ).animate().fade(duration: 300.ms).slideY(begin: 0.1, end: 0);
             },
           );
         },
