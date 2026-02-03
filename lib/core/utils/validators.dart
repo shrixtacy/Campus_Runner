@@ -6,8 +6,8 @@ class AppValidators {
     }
     // Regex to check if email ends with .edu or .edu.in or similar academic domains
     // You can customize this to your specific college domain, e.g., "@srm.edu.in"
-    final bool isEduEmail = value.contains('.edu');
-    
+    final bool isEduEmail = value.contains('.in') || value.contains('.edu');
+
     if (!value.contains('@')) {
       return 'Please enter a valid email';
     }
