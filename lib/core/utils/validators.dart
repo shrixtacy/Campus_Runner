@@ -1,18 +1,15 @@
 class AppValidators {
-  // Enforces University Email Policy
+  // Email validation (.in or .edu domains)
   static String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Email is required';
     }
-    // Regex to check if email ends with .edu or .edu.in or similar academic domains
-    // You can customize this to your specific college domain, e.g., "@srm.edu.in"
-    final bool isEduEmail = value.contains('.in') || value.contains('.edu');
-
     if (!value.contains('@')) {
       return 'Please enter a valid email';
     }
-    if (!isEduEmail) {
-      return 'Please use your college (.edu) email ID';
+    final lower = value.toLowerCase();
+    if (!(lower.endsWith('.in') || lower.endsWith('.edu'))) {
+      return 'Please use your .in or .edu email ID';
     }
     return null;
   }

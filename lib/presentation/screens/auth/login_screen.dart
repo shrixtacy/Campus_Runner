@@ -22,14 +22,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // --- NEW AUTHENTICATION LOGIC ---
   void _continueWithGoogle() async {
     setState(() => _isLoading = true);
-    
+
     // Read the AuthRepository and call the Google Sign-In function
-    final user = await ref.read(authRepositoryProvider).signInWithGoogle();
+    final result = await ref.read(authRepositoryProvider).signInWithGoogle();
 
     if (mounted) {
       setState(() => _isLoading = false);
-      
-      if (user != null) {
+
+      if (result.user != null) {
         // Sign-in successful, replace screen with RunnerHomeScreen
         Navigator.pushReplacement(
           context,
@@ -38,7 +38,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } else {
         // Sign-in failed or user cancelled
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Google Sign-In failed or cancelled.")),
+          SnackBar(
+            content: Text(
+              result.errorMessage ?? 'Google Sign-In failed or cancelled.',
+            ),
+          ),
         );
       }
     }
@@ -64,25 +68,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // LOGO ANIMATION
-            Icon(PhosphorIcons.sneakerMove(PhosphorIconsStyle.fill), size: 80, color: Colors.white)
-                .animate()
-                .scale(duration: 600.ms, curve: Curves.easeOutBack),
-            
+            Icon(
+              PhosphorIcons.sneakerMove(PhosphorIconsStyle.fill),
+              size: 80,
+              color: Colors.white,
+            ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
+
             const SizedBox(height: 20),
-            
+
             const Text(
               "Campus Runner",
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ).animate().fade().slideY(begin: 0.3, end: 0),
-            
+
             const SizedBox(height: 10),
-            
+
             const Text(
               "Earn money while you walk.\nGet food without moving.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, fontSize: 16),
             ),
-            
+
             const SizedBox(height: 60),
 
             // GOOGLE LOGIN BUTTON
@@ -90,34 +100,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _continueWithGoogle, // Call the new logic
-                icon: _isLoading 
+                onPressed: _isLoading
+                    ? null
+                    : _continueWithGoogle, // Call the new logic
+                icon: _isLoading
                     ? const SizedBox(
-                        height: 20, 
-                        width: 20, 
-                        child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.blue))
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.blue,
+                          ),
+                        ),
                       )
-                    : Icon(PhosphorIcons.googleLogo(), color: Theme.of(context).primaryColor),
+                    : Icon(
+                        PhosphorIcons.googleLogo(),
+                        color: Theme.of(context).primaryColor,
+                      ),
                 label: Text(
-                  _isLoading ? "Signing In..." : "Continue with College Email", // Update button text
+                  _isLoading ? "Signing In..." : "Continue with Gmail",
                   style: TextStyle(
-                    fontSize: 16, 
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Theme.of(context).primaryColor,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ).animate().fade(delay: 500.ms).slideY(begin: 0.5, end: 0),
-            
+
             const SizedBox(height: 20),
             const Text(
-              "Only @university.edu.in emails allowed",
+              "Only @vitbhopal.ac.in emails allowed",
               style: TextStyle(color: Colors.white54, fontSize: 12),
             ),
           ],

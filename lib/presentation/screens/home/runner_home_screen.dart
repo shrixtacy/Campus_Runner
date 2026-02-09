@@ -7,9 +7,13 @@ import 'package:url_launcher/url_launcher.dart'; // REQUIRED FOR PDF VIEWER
 
 // Project Imports
 import '../../../logic/task_provider.dart';
+import '../../../logic/campus_provider.dart';
 import '../../../core/utils/formatters.dart';
 import '../../widgets/cards/task_card.dart';
+import 'campuses_screen.dart';
+import 'register_shop_screen.dart';
 import 'requester_home_screen.dart';
+import 'smart_route_screen.dart';
 
 // Use ConsumerStatefulWidget to listen to Riverpod Providers
 class RunnerHomeScreen extends ConsumerStatefulWidget {
@@ -40,14 +44,53 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
   Widget build(BuildContext context) {
     // WATCH THE STREAM: This line connects UI to Firebase and updates in real-time
     final tasksAsync = ref.watch(tasksStreamProvider);
+    final campusesAsync = ref.watch(campusesStreamProvider);
+    final selectedCampusId = ref.watch(selectedCampusProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Available Tasks"),
         centerTitle: false,
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SmartRouteScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.alt_route),
+          ),
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel())),
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell())),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'register_shop') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const RegisterShopScreen(),
+                  ),
+                );
+              } else if (value == 'campuses') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CampusesScreen(),
+                  ),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'register_shop',
+                child: Text('Register Shop'),
+              ),
+              const PopupMenuItem(value: 'campuses', child: Text('Campuses')),
+            ],
+          ),
         ],
       ),
 
@@ -66,143 +109,203 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
       ),
 
       // THE BODY: Handles Loading, Error, and Data states from the Stream
-      body: tasksAsync.when(
-        // A. LOADING STATE
-        loading: () => Skeletonizer(
-          enabled: true,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: 6,
-            itemBuilder: (context, index) {
-              return const TaskCard(
-                title: "Loading Task Title...",
-                pickup: "Loading Location...",
-                drop: "Loading Drop...",
-                price: "...",
-                time: "...",
-              );
-            },
-          ),
-        ),
-
-        // B. ERROR STATE
-        error: (err, stack) =>
-            Center(child: Text("Error loading tasks: ${err.toString()}")),
-
-        // C. DATA STATE
-        data: (tasks) {
-          if (tasks.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(PhosphorIcons.smileySad(), size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "No tasks available right now.",
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: campusesAsync.when(
+              data: (campuses) {
+                final campusItems = [
+                  const DropdownMenuItem(
+                    value: 'all',
+                    child: Text('All campuses'),
                   ),
-                ],
-              ),
-            );
-          }
-
-          // Show the list of tasks
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: tasks.length,
-            itemBuilder: (context, index) {
-              final task = tasks[index];
-
-              // We use a Column to stack the card and the action button
-              return Column(
-                children: [
-                  // 1. The Task Card Display
-                  TaskCard(
-                    title: task.title,
-                    pickup: task.pickup,
-                    drop: task.drop,
-                    price: "₹${task.price}",
-                    time: AppFormatters.formatTimeAgo(task.createdAt),
-                  ),
-
-                  // 2. Action Buttons (New Row for File View and Acceptance)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 24),
-                    child: Row(
-                      children: [
-                        // --- VIEW DOCUMENT BUTTON (Only shows if fileUrl exists) ---
-                        if (task.fileUrl != null)
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () =>
-                                  _launchDocument(task.fileUrl!, context),
-                              icon: Icon(PhosphorIcons.filePdf()),
-                              label: const Text("View Document"),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.primary,
-                                side: BorderSide(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        // Add space between buttons if both are present
-                        if (task.fileUrl != null && task.status == 'OPEN')
-                          const SizedBox(width: 8),
-
-                        // --- ACCEPT BUTTON (Only shows if status is OPEN) ---
-                        if (task.status == 'OPEN')
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                // Call the Repository to update status to IN_PROGRESS
-                                try {
-                                  await ref
-                                      .read(taskRepositoryProvider)
-                                      .updateTaskStatus(task.id, 'IN_PROGRESS');
-
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Task Accepted! Go get it!",
-                                        ),
-                                        backgroundColor: Colors.black,
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text("Error accepting task: $e"),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.black87,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              icon: const Icon(Icons.check_circle, size: 18),
-                              label: const Text("Accept"),
-                            ),
-                          ),
-                      ],
+                  ...campuses.map(
+                    (campus) => DropdownMenuItem(
+                      value: campus.id,
+                      child: Text(campus.name),
                     ),
                   ),
-                ],
-              ).animate().fade(duration: 300.ms).slideY(begin: 0.1, end: 0);
-            },
-          );
-        },
+                ];
+
+                return DropdownButtonFormField<String>(
+                  initialValue: selectedCampusId ?? 'all',
+                  decoration: const InputDecoration(
+                    labelText: 'Filter by campus',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: campusItems,
+                  onChanged: (value) {
+                    ref.read(selectedCampusProvider.notifier).state =
+                        value ?? 'all';
+                  },
+                );
+              },
+              loading: () => const LinearProgressIndicator(),
+              error: (error, _) => Text('Error: $error'),
+            ),
+          ),
+          Expanded(
+            child: tasksAsync.when(
+              // A. LOADING STATE
+              loading: () => Skeletonizer(
+                enabled: true,
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: 6,
+                  itemBuilder: (context, index) {
+                    return const TaskCard(
+                      title: "Loading Task Title...",
+                      pickup: "Loading Location...",
+                      drop: "Loading Drop...",
+                      price: "...",
+                      time: "...",
+                      transportMode: "Walking",
+                    );
+                  },
+                ),
+              ),
+
+              // B. ERROR STATE
+              error: (err, stack) =>
+                  Center(child: Text("Error loading tasks: ${err.toString()}")),
+
+              // C. DATA STATE
+              data: (tasks) {
+                if (tasks.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          PhosphorIcons.smileySad(),
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          "No tasks available right now.",
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // Show the list of tasks
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+
+                    // We use a Column to stack the card and the action button
+                    return Column(
+                      children: [
+                        // 1. The Task Card Display
+                        TaskCard(
+                          title: task.title,
+                          pickup: task.pickup,
+                          drop: task.drop,
+                          price: "₹${task.price}",
+                          time: AppFormatters.formatTimeAgo(task.createdAt),
+                          transportMode: task.transportMode,
+                        ),
+
+                        // 2. Action Buttons (New Row for File View and Acceptance)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 24),
+                          child: Row(
+                            children: [
+                              // --- VIEW DOCUMENT BUTTON (Only shows if fileUrl exists) ---
+                              if (task.fileUrl != null)
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () =>
+                                        _launchDocument(task.fileUrl!, context),
+                                    icon: Icon(PhosphorIcons.filePdf()),
+                                    label: const Text("View Document"),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      side: BorderSide(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                              // Add space between buttons if both are present
+                              if (task.fileUrl != null && task.status == 'OPEN')
+                                const SizedBox(width: 8),
+
+                              // --- ACCEPT BUTTON (Only shows if status is OPEN) ---
+                              if (task.status == 'OPEN')
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () async {
+                                      // Call the Repository to update status to IN_PROGRESS
+                                      try {
+                                        await ref
+                                            .read(taskRepositoryProvider)
+                                            .updateTaskStatus(
+                                              task.id,
+                                              'IN_PROGRESS',
+                                            );
+
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                "Task Accepted! Go get it!",
+                                              ),
+                                              backgroundColor: Colors.black,
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "Error accepting task: $e",
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.black87,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    icon: const Icon(
+                                      Icons.check_circle,
+                                      size: 18,
+                                    ),
+                                    label: const Text("Accept"),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ).animate().fade(duration: 300.ms).slideY(begin: 0.1, end: 0);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
