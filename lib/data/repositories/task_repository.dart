@@ -10,13 +10,18 @@ class TaskRepository {
   }
 
   // 2. READ (Stream)
-  Stream<List<TaskModel>> getOpenTasks() {
-    return _firestore
+  Stream<List<TaskModel>> getOpenTasks({String? campusId}) {
+    var query = _firestore
         .collection('tasks')
-        .where('status', isEqualTo: 'OPEN') 
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
+        .where('status', isEqualTo: 'OPEN');
+
+    if (campusId != null && campusId.isNotEmpty && campusId != 'all') {
+      query = query.where('campusId', isEqualTo: campusId);
+    }
+
+    return query.orderBy('createdAt', descending: true).snapshots().map((
+      snapshot,
+    ) {
       return snapshot.docs.map((doc) {
         return TaskModel.fromMap(doc.data(), doc.id);
       }).toList();

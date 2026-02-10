@@ -9,7 +9,10 @@ class TaskModel {
   final String price;
   final String status; // 'OPEN', 'ACCEPTED', 'COMPLETED'
   final DateTime createdAt;
-  
+  final String campusId;
+  final String campusName;
+  final String transportMode;
+
   // --- NEW FIELD ADDED ---
   final String? fileUrl; // URL where the PDF is stored in Firebase Storage
 
@@ -22,8 +25,11 @@ class TaskModel {
     required this.price,
     required this.status,
     required this.createdAt,
+    required this.campusId,
+    required this.campusName,
+    required this.transportMode,
     // --- NEW FIELD IN CONSTRUCTOR ---
-    this.fileUrl, 
+    this.fileUrl,
   });
 
   // Convert Firebase Data -> Dart Object
@@ -37,8 +43,11 @@ class TaskModel {
       price: map['price'] ?? '0',
       status: map['status'] ?? 'OPEN',
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] ?? 0),
+      campusId: map['campusId'] ?? 'unknown',
+      campusName: map['campusName'] ?? 'Unknown Campus',
+      transportMode: map['transportMode'] ?? 'Walking',
       // --- FROM MAP: Reads the URL from Firestore ---
-      fileUrl: map['fileUrl'], 
+      fileUrl: map['fileUrl'],
     );
   }
 
@@ -52,8 +61,11 @@ class TaskModel {
       'price': price,
       'status': status,
       'createdAt': createdAt.millisecondsSinceEpoch,
+      'campusId': campusId,
+      'campusName': campusName,
+      'transportMode': transportMode,
       // --- TO MAP: Writes the URL to Firestore ---
-      'fileUrl': fileUrl, 
+      'fileUrl': fileUrl,
     };
   }
 }

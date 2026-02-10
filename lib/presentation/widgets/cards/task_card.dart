@@ -7,6 +7,7 @@ class TaskCard extends StatelessWidget {
   final String drop;
   final String price;
   final String time;
+  final String transportMode;
 
   const TaskCard({
     super.key,
@@ -15,6 +16,7 @@ class TaskCard extends StatelessWidget {
     required this.drop,
     required this.price,
     required this.time,
+    required this.transportMode,
   });
 
   @override
@@ -67,6 +69,12 @@ class TaskCard extends StatelessWidget {
                     Icon(PhosphorIcons.arrowDown(PhosphorIconsStyle.bold), size: 12, color: theme.primaryColor),
                     const SizedBox(height: 2),
                     _buildIconText(PhosphorIcons.mapPin(), drop, theme.primaryColor),
+                    const SizedBox(height: 6),
+                    _buildIconText(
+                      _transportIcon(transportMode),
+                      transportMode,
+                      Colors.grey,
+                    ),
                   ],
                 ),
               ),
@@ -102,5 +110,16 @@ class TaskCard extends StatelessWidget {
         Text(text, style: TextStyle(color: color == Colors.grey ? Colors.grey[600] : color, fontSize: 13)),
       ],
     );
+  }
+
+  IconData _transportIcon(String mode) {
+    switch (mode.toLowerCase()) {
+      case 'cycling':
+        return Icons.directions_bike;
+      case 'vehicle':
+        return Icons.directions_car;
+      default:
+        return Icons.directions_walk;
+    }
   }
 }

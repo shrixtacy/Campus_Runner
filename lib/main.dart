@@ -1,15 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// --- IMPORTANT FIX HERE ---
-// Ensure this line does NOT have '//' in front of it.
-import 'firebase_options.dart'; 
-// --------------------------
-
 import 'presentation/screens/auth/login_screen.dart';
+
+FirebaseOptions? _firebaseOptionsFromEnv() {
+  const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
+  const appId = String.fromEnvironment('FIREBASE_APP_ID');
+  const messagingSenderId = String.fromEnvironment(
+    'FIREBASE_MESSAGING_SENDER_ID',
+  );
+  const projectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+  const authDomain = String.fromEnvironment('FIREBASE_AUTH_DOMAIN');
+  const storageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+  const measurementId = String.fromEnvironment('FIREBASE_MEASUREMENT_ID');
+
+  if (apiKey.isEmpty ||
+      appId.isEmpty ||
+      messagingSenderId.isEmpty ||
+      projectId.isEmpty) {
+    return null;
+  }
+
+  return FirebaseOptions(
+    apiKey: apiKey,
+    appId: appId,
+    messagingSenderId: messagingSenderId,
+    projectId: projectId,
+    authDomain: authDomain.isEmpty ? null : authDomain,
+    storageBucket: storageBucket.isEmpty ? null : storageBucket,
+    measurementId: measurementId.isEmpty ? null : measurementId,
+  );
+}
+
+bool _needsExplicitOptions() {
+  return kIsWeb || defaultTargetPlatform == TargetPlatform.windows;
+}
 
 void main() async {
   // 1. Initialize Flutter Bindings
@@ -18,24 +48,25 @@ void main() async {
   // 2. Initialize Firebase
   // Using a try-catch block is safer to see errors in the console
   try {
-    await Firebase.initializeApp();
-    // If you have a generated `firebase_options.dart` that provides
-    // `DefaultFirebaseOptions`, restore the import at the top and replace
-    // the call above with:
-    // await Firebase.initializeApp(
-    //   options: DefaultFirebaseOptions.currentPlatform,
-    // );
+    final options = _needsExplicitOptions() ? _firebaseOptionsFromEnv() : null;
+    if (options == null && _needsExplicitOptions()) {
+      throw Exception(
+        'Missing Firebase options. Provide --dart-define values for web/windows.',
+      );
+    }
+
+    if (options != null) {
+      await Firebase.initializeApp(options: options);
+    } else {
+      await Firebase.initializeApp();
+    }
     debugPrint("✅ Firebase Initialized Successfully");
   } catch (e) {
     debugPrint("❌ Firebase Initialization Failed: $e");
   }
 
   // 3. Run App wrapped in ProviderScope (Required for Riverpod)
-  runApp(
-    const ProviderScope(
-      child: CampusRunnerApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: CampusRunnerApp()));
 }
 
 class CampusRunnerApp extends StatelessWidget {
@@ -46,7 +77,7 @@ class CampusRunnerApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Campus Runner',
-      
+
       // --- THEME SETUP (Deep Blue & Gold) ---
       theme: FlexThemeData.light(
         scheme: FlexScheme.bahamaBlue,
@@ -59,7 +90,6 @@ class CampusRunnerApp extends StatelessWidget {
         useMaterial3: true,
       ),
       themeMode: ThemeMode.system, // Auto-switch based on phone settings
-
       // --- HOME SCREEN ---
       // Starts at Login.
       home: const LoginScreen(),
