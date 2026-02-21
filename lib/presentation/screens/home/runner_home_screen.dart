@@ -6,9 +6,12 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:url_launcher/url_launcher.dart'; // REQUIRED FOR PDF VIEWER
 
 // Project Imports
+import '../../../core/config/app_mode.dart';
+import '../../../logic/auth_provider.dart';
 import '../../../logic/task_provider.dart';
 import '../../../logic/campus_provider.dart';
 import '../../../core/utils/formatters.dart';
+import '../auth/login_screen.dart';
 import '../../widgets/cards/task_card.dart';
 import 'campuses_screen.dart';
 import 'register_shop_screen.dart';
@@ -24,6 +27,26 @@ class RunnerHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
+  bool _isLoggedIn() {
+    if (!AppMode.backendEnabled) return true;
+    return ref.read(authRepositoryProvider).getCurrentUser() != null;
+  }
+
+  Future<bool> _requireLogin(String message) async {
+    if (_isLoggedIn()) return true;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+
+    return result == true;
+  }
+
   // Helper to open the document URL
   Future<void> _launchDocument(String url, BuildContext context) async {
     final uri = Uri.parse(url);
@@ -66,8 +89,13 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel())),
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell())),
           PopupMenuButton<String>(
-            onSelected: (value) {
+            onSelected: (value) async {
               if (value == 'register_shop') {
+                final canContinue = await _requireLogin(
+                  'Please sign in to register a shop.',
+                );
+                if (!canContinue || !context.mounted) return;
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -96,7 +124,12 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
 
       // Floating Button to Post a New Task (for testing/requester flow)
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+        onPressed: () async {
+          final canContinue = await _requireLogin(
+            'Please sign in to post a task.',
+          );
+          if (!canContinue || !context.mounted) return;
+
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -247,6 +280,13 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                                 Expanded(
                                   child: ElevatedButton.icon(
                                     onPressed: () async {
+                                      final canContinue = await _requireLogin(
+                                        'Please sign in to accept tasks.',
+                                      );
+                                      if (!canContinue || !context.mounted) {
+                                        return;
+                                      }
+
                                       // Call the Repository to update status to IN_PROGRESS
                                       try {
                                         await ref

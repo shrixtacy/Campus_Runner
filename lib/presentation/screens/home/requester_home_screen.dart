@@ -7,13 +7,16 @@ import 'package:uuid/uuid.dart'; // <<<--- MISSING IMPORT ADDED HERE
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 // Project Imports
+import '../../../core/config/app_mode.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../widgets/inputs/primary_button.dart';
 import '../../../core/utils/validators.dart';
 import '../../../data/models/task_model.dart';
+import '../../../logic/auth_provider.dart';
 import '../../../logic/campus_provider.dart';
 import '../../../logic/task_provider.dart';
 import '../../../logic/storage_provider.dart';
+import '../auth/login_screen.dart';
 
 // 1. Change to ConsumerStatefulWidget
 class RequesterHomeScreen extends ConsumerStatefulWidget {
@@ -209,6 +212,25 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
 
   // THE MAIN FUNCTION: Saves data to Firebase
   void _postTask() async {
+    var user = ref.read(authRepositoryProvider).getCurrentUser();
+    if (AppMode.backendEnabled && user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to post a task.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+
+      final loggedIn = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+
+      if (loggedIn != true || !mounted) return;
+      user = ref.read(authRepositoryProvider).getCurrentUser();
+      if (user == null) return;
+    }
+
     // Check if a file is required and present
     if (_selectedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -237,7 +259,7 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
         // --- STEP 2: SAVE TASK WITH URL TO FIRESTORE ---
         final newTask = TaskModel(
           id: '',
-          requesterId: 'TEMP_USER_ID',
+          requesterId: user?.uid ?? 'demo-user',
           title: _itemController.text,
           pickup: _selectedPickup!,
           drop: _selectedDrop!,

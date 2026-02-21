@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../../core/config/app_mode.dart';
 
 class AuthResult {
   final User? user;
@@ -16,9 +17,13 @@ class AuthRepository {
     hostedDomain: allowedDomain,
   );
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
   Future<AuthResult> signInWithGoogle() async {
+    if (!AppMode.backendEnabled) {
+      return const AuthResult(
+        errorMessage: 'Login is disabled in demo mode.',
+      );
+    }
+
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
@@ -41,7 +46,9 @@ class AuthRepository {
         accessToken: googleAuth.accessToken,
       );
 
-      final userCredential = await _auth.signInWithCredential(credential);
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(
+        credential,
+      );
 
       return AuthResult(user: userCredential.user);
     } on FirebaseAuthException catch (e) {
@@ -51,5 +58,6 @@ class AuthRepository {
     }
   }
 
-  User? getCurrentUser() => _auth.currentUser;
+  User? getCurrentUser() =>
+      AppMode.backendEnabled ? FirebaseAuth.instance.currentUser : null;
 }

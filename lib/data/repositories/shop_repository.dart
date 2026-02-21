@@ -1,15 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../core/config/app_mode.dart';
 import '../models/shop_model.dart';
 
 class ShopRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final List<ShopModel> _demoShops = [];
 
   Future<void> addShop(ShopModel shop) async {
-    await _firestore.collection('shops').add(shop.toMap());
+    if (!AppMode.backendEnabled) {
+      _demoShops.add(shop);
+      return;
+    }
+
+    final firestore = FirebaseFirestore.instance;
+    await firestore.collection('shops').add(shop.toMap());
   }
 
-  String? currentUserId() => _auth.currentUser?.uid;
+  String? currentUserId() =>
+      AppMode.backendEnabled ? FirebaseAuth.instance.currentUser?.uid : 'demo-user';
 }
