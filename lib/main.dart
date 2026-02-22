@@ -6,7 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'presentation/screens/auth/login_screen.dart';
+import 'core/config/app_mode.dart';
+import 'presentation/screens/home/runner_home_screen.dart';
 
 FirebaseOptions? _firebaseOptionsFromEnv() {
   const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
@@ -45,24 +46,27 @@ void main() async {
   // 1. Initialize Flutter Bindings
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Initialize Firebase
-  // Using a try-catch block is safer to see errors in the console
-  try {
-    final options = _needsExplicitOptions() ? _firebaseOptionsFromEnv() : null;
-    if (options == null && _needsExplicitOptions()) {
-      throw Exception(
-        'Missing Firebase options. Provide --dart-define values for web/windows.',
-      );
-    }
+  // 2. Initialize Firebase only when backend mode is enabled.
+  if (AppMode.backendEnabled) {
+    try {
+      final options = _needsExplicitOptions() ? _firebaseOptionsFromEnv() : null;
+      if (options == null && _needsExplicitOptions()) {
+        throw Exception(
+          'Missing Firebase options. Provide --dart-define values for web/windows.',
+        );
+      }
 
-    if (options != null) {
-      await Firebase.initializeApp(options: options);
-    } else {
-      await Firebase.initializeApp();
+      if (options != null) {
+        await Firebase.initializeApp(options: options);
+      } else {
+        await Firebase.initializeApp();
+      }
+      debugPrint("✅ Firebase Initialized Successfully");
+    } catch (e) {
+      debugPrint("❌ Firebase Initialization Failed: $e");
     }
-    debugPrint("✅ Firebase Initialized Successfully");
-  } catch (e) {
-    debugPrint("❌ Firebase Initialization Failed: $e");
+  } else {
+    debugPrint("ℹ️ Running in demo mode (backend disabled)");
   }
 
   // 3. Run App wrapped in ProviderScope (Required for Riverpod)
@@ -91,8 +95,8 @@ class CampusRunnerApp extends StatelessWidget {
       ),
       themeMode: ThemeMode.system, // Auto-switch based on phone settings
       // --- HOME SCREEN ---
-      // Starts at Login.
-      home: const LoginScreen(),
+      // Guest browsing by default.
+      home: const RunnerHomeScreen(),
     );
   }
 }

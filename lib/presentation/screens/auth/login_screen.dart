@@ -19,6 +19,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // State to handle the button spinner
   bool _isLoading = false;
 
+  void _goToHomeIfRoot() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(false);
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const RunnerHomeScreen()),
+    );
+  }
+
   // --- NEW AUTHENTICATION LOGIC ---
   void _continueWithGoogle() async {
     setState(() => _isLoading = true);
@@ -30,11 +42,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       setState(() => _isLoading = false);
 
       if (result.user != null) {
-        // Sign-in successful, replace screen with RunnerHomeScreen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const RunnerHomeScreen()),
-        );
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(true);
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const RunnerHomeScreen()),
+          );
+        }
       } else {
         // Sign-in failed or user cancelled
         ScaffoldMessenger.of(context).showSnackBar(
@@ -138,6 +153,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ).animate().fade(delay: 500.ms).slideY(begin: 0.5, end: 0),
 
             const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: _isLoading ? null : _goToHomeIfRoot,
+                child: const Text(
+                  "Continue as Guest",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             const Text(
               "Only @vitbhopal.ac.in emails allowed",
               style: TextStyle(color: Colors.white54, fontSize: 12),
