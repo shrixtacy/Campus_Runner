@@ -3,22 +3,22 @@
 class TaskModel {
   final String id;
   final String requesterId;
+  final String? runnerId;
   final String title;
   final String pickup;
   final String drop;
   final String price;
-  final String status; // 'OPEN', 'ACCEPTED', 'COMPLETED'
+  final String status;
   final DateTime createdAt;
   final String campusId;
   final String campusName;
   final String transportMode;
-
-  // --- NEW FIELD ADDED ---
-  final String? fileUrl; // URL where the PDF is stored in Firebase Storage
+  final String? fileUrl;
 
   TaskModel({
     required this.id,
     required this.requesterId,
+    this.runnerId,
     required this.title,
     required this.pickup,
     required this.drop,
@@ -28,15 +28,14 @@ class TaskModel {
     required this.campusId,
     required this.campusName,
     required this.transportMode,
-    // --- NEW FIELD IN CONSTRUCTOR ---
     this.fileUrl,
   });
 
-  // Convert Firebase Data -> Dart Object
   factory TaskModel.fromMap(Map<String, dynamic> map, String docId) {
     return TaskModel(
       id: docId,
       requesterId: map['requesterId'] ?? '',
+      runnerId: map['runnerId'],
       title: map['title'] ?? '',
       pickup: map['pickup'] ?? '',
       drop: map['drop'] ?? '',
@@ -46,15 +45,14 @@ class TaskModel {
       campusId: map['campusId'] ?? 'unknown',
       campusName: map['campusName'] ?? 'Unknown Campus',
       transportMode: map['transportMode'] ?? 'Walking',
-      // --- FROM MAP: Reads the URL from Firestore ---
       fileUrl: map['fileUrl'],
     );
   }
 
-  // Convert Dart Object -> Firebase Data
   Map<String, dynamic> toMap() {
     return {
       'requesterId': requesterId,
+      if (runnerId != null) 'runnerId': runnerId,
       'title': title,
       'pickup': pickup,
       'drop': drop,
@@ -64,7 +62,6 @@ class TaskModel {
       'campusId': campusId,
       'campusName': campusName,
       'transportMode': transportMode,
-      // --- TO MAP: Writes the URL to Firestore ---
       'fileUrl': fileUrl,
     };
   }

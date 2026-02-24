@@ -297,13 +297,18 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                                         return;
                                       }
 
-                                      // Call the Repository to update status to IN_PROGRESS
                                       try {
+                                        final currentUser = ref.read(authRepositoryProvider).getCurrentUser();
+                                        if (currentUser == null) {
+                                          throw Exception('User not authenticated');
+                                        }
+                                        
                                         await ref
                                             .read(taskRepositoryProvider)
                                             .updateTaskStatus(
                                               task.id,
                                               'IN_PROGRESS',
+                                              runnerId: currentUser.uid,
                                             );
 
                                         if (context.mounted) {
