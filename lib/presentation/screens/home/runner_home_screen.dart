@@ -17,6 +17,7 @@ import 'campuses_screen.dart';
 import 'register_shop_screen.dart';
 import 'requester_home_screen.dart';
 import 'smart_route_screen.dart';
+import '../profile/profile_screen.dart';
 
 // Use ConsumerStatefulWidget to listen to Riverpod Providers
 class RunnerHomeScreen extends ConsumerStatefulWidget {
@@ -88,6 +89,15 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
           ),
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.funnel())),
           IconButton(onPressed: () {}, icon: Icon(PhosphorIcons.bell())),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
+            },
+            icon: Icon(PhosphorIcons.userCircle()),
+          ),
           PopupMenuButton<String>(
             onSelected: (value) async {
               if (value == 'register_shop') {

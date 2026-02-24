@@ -60,4 +60,11 @@ class AuthRepository {
 
   User? getCurrentUser() =>
       AppMode.backendEnabled ? FirebaseAuth.instance.currentUser : null;
+
+  Future<void> signOut() async {
+    if (!AppMode.backendEnabled) return;
+
+    await _googleSignIn.signOut();
+    await FirebaseAuth.instance.signOut();
+  }
 }
