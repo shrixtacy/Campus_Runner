@@ -102,8 +102,7 @@ class TaskRepository {
     });
   }
 
-  // 3. UPDATE (Accept or Complete Task) - NEW CODE
-  Future<void> updateTaskStatus(String taskId, String newStatus) async {
+  Future<void> updateTaskStatus(String taskId, String newStatus, {String? runnerId}) async {
     if (!AppMode.backendEnabled) {
       final index = _demoTasks.indexWhere((task) => task.id == taskId);
       if (index == -1) return;
@@ -111,6 +110,7 @@ class TaskRepository {
       _demoTasks[index] = TaskModel(
         id: old.id,
         requesterId: old.requesterId,
+        runnerId: runnerId ?? old.runnerId,
         title: old.title,
         pickup: old.pickup,
         drop: old.drop,
@@ -128,9 +128,11 @@ class TaskRepository {
 
     try {
       final firestore = FirebaseFirestore.instance;
-      await firestore.collection('tasks').doc(taskId).update({
-        'status': newStatus,
-      });
+      final updateData = <String, dynamic>{'status': newStatus};
+      if (runnerId != null) {
+        updateData['runnerId'] = runnerId;
+      }
+      await firestore.collection('tasks').doc(taskId).update(updateData);
     } catch (e) {
       throw Exception('Failed to update task: $e');
     }
