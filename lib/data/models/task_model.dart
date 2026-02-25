@@ -14,6 +14,9 @@ class TaskModel {
   final String campusName;
   final String transportMode;
   final String? fileUrl;
+  final double? runnerLatitude;
+  final double? runnerLongitude;
+  final DateTime? locationLastUpdated;
 
   TaskModel({
     required this.id,
@@ -29,6 +32,9 @@ class TaskModel {
     required this.campusName,
     required this.transportMode,
     this.fileUrl,
+    this.runnerLatitude,
+    this.runnerLongitude,
+    this.locationLastUpdated,
   });
 
   factory TaskModel.fromMap(Map<String, dynamic> map, String docId) {
@@ -46,6 +52,11 @@ class TaskModel {
       campusName: map['campusName'] ?? 'Unknown Campus',
       transportMode: map['transportMode'] ?? 'Walking',
       fileUrl: map['fileUrl'],
+      runnerLatitude: map['runnerLatitude']?.toDouble(),
+      runnerLongitude: map['runnerLongitude']?.toDouble(),
+      locationLastUpdated: map['locationLastUpdated'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['locationLastUpdated'])
+          : null,
     );
   }
 
@@ -63,6 +74,10 @@ class TaskModel {
       'campusName': campusName,
       'transportMode': transportMode,
       'fileUrl': fileUrl,
+      if (runnerLatitude != null) 'runnerLatitude': runnerLatitude,
+      if (runnerLongitude != null) 'runnerLongitude': runnerLongitude,
+      if (locationLastUpdated != null)
+        'locationLastUpdated': locationLastUpdated!.millisecondsSinceEpoch,
     };
   }
 }
