@@ -17,6 +17,11 @@ class TaskModel {
   final double? runnerLatitude;
   final double? runnerLongitude;
   final DateTime? locationLastUpdated;
+  final DateTime? acceptedAt;
+  final DateTime? completedAt;
+  final String? runnerName;
+  final String? runnerPhone;
+  final bool paymentVerified;
 
   TaskModel({
     required this.id,
@@ -35,6 +40,11 @@ class TaskModel {
     this.runnerLatitude,
     this.runnerLongitude,
     this.locationLastUpdated,
+    this.acceptedAt,
+    this.completedAt,
+    this.runnerName,
+    this.runnerPhone,
+    this.paymentVerified = false,
   });
 
   factory TaskModel.fromMap(Map<String, dynamic> map, String docId) {
@@ -57,6 +67,15 @@ class TaskModel {
       locationLastUpdated: map['locationLastUpdated'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['locationLastUpdated'])
           : null,
+      acceptedAt: map['acceptedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['acceptedAt'])
+          : null,
+      completedAt: map['completedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['completedAt'])
+          : null,
+      runnerName: map['runnerName'],
+      runnerPhone: map['runnerPhone'],
+      paymentVerified: map['paymentVerified'] ?? false,
     );
   }
 
@@ -73,11 +92,18 @@ class TaskModel {
       'campusId': campusId,
       'campusName': campusName,
       'transportMode': transportMode,
-      'fileUrl': fileUrl,
+      if (fileUrl != null) 'fileUrl': fileUrl,
       if (runnerLatitude != null) 'runnerLatitude': runnerLatitude,
       if (runnerLongitude != null) 'runnerLongitude': runnerLongitude,
       if (locationLastUpdated != null)
         'locationLastUpdated': locationLastUpdated!.millisecondsSinceEpoch,
+      if (acceptedAt != null)
+        'acceptedAt': acceptedAt!.millisecondsSinceEpoch,
+      if (completedAt != null)
+        'completedAt': completedAt!.millisecondsSinceEpoch,
+      if (runnerName != null) 'runnerName': runnerName,
+      if (runnerPhone != null) 'runnerPhone': runnerPhone,
+      'paymentVerified': paymentVerified,
     };
   }
 }

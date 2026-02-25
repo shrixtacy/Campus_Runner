@@ -102,7 +102,75 @@ class TaskRepository {
     });
   }
 
-  Future<void> updateTaskStatus(String taskId, String newStatus, {String? runnerId}) async {
+  Future<void> acceptTask({
+    required String taskId,
+    required String runnerId,
+    required String runnerName,
+    required String runnerPhone,
+  }) async {
+    if (!AppMode.backendEnabled) {
+      final index = _demoTasks.indexWhere((task) => task.id == taskId);
+      if (index == -1) return;
+      final old = _demoTasks[index];
+      _demoTasks[index] = TaskModel(
+        id: old.id,
+        requesterId: old.requesterId,
+        runnerId: runnerId,
+        title: old.title,
+        pickup: old.pickup,
+        drop: old.drop,
+        price: old.price,
+        status: 'IN_PROGRESS',
+        createdAt: old.createdAt,
+        campusId: old.campusId,
+        campusName: old.campusName,
+        transportMode: old.transportMode,
+        fileUrl: old.fileUrl,
+        acceptedAt: DateTime.now(),
+        runnerName: runnerName,
+        runnerPhone: runnerPhone,
+      );
+      _demoTasksTicker.add(_demoTasks.length);
+      return;
+    }
+
+    final firestore = FirebaseFirestore.instance;
+
+    await firestore.runTransaction((transaction) async {
+      final taskRef = firestore.collection('tasks').doc(taskId);
+      final taskSnapshot = await transaction.get(taskRef);
+
+      if (!taskSnapshot.exists) {
+        throw Exception('Task not found');
+      }
+
+      final taskData = taskSnapshot.data()!;
+      final currentStatus = taskData['status'];
+
+      if (currentStatus != 'OPEN') {
+        throw Exception('Task is no longer available');
+      }
+
+      if (taskData['runnerId'] != null) {
+        throw Exception('Task already has a runner assigned');
+      }
+
+      transaction.update(taskRef, {
+        'status': 'IN_PROGRESS',
+        'runnerId': runnerId,
+        'runnerName': runnerName,
+        'runnerPhone': runnerPhone,
+        'acceptedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  Future<void> updateTaskStatus(
+    String taskId,
+    String newStatus, {
+    String? runnerId,
+    bool? paymentVerified,
+  }) async {
     if (!AppMode.backendEnabled) {
       final index = _demoTasks.indexWhere((task) => task.id == taskId);
       if (index == -1) return;
@@ -121,6 +189,11 @@ class TaskRepository {
         campusName: old.campusName,
         transportMode: old.transportMode,
         fileUrl: old.fileUrl,
+        completedAt: newStatus == 'COMPLETED' ? DateTime.now() : old.completedAt,
+        acceptedAt: old.acceptedAt,
+        runnerName: old.runnerName,
+        runnerPhone: old.runnerPhone,
+        paymentVerified: paymentVerified ?? old.paymentVerified,
       );
       _demoTasksTicker.add(_demoTasks.length);
       return;
@@ -129,12 +202,75 @@ class TaskRepository {
     try {
       final firestore = FirebaseFirestore.instance;
       final updateData = <String, dynamic>{'status': newStatus};
+      
       if (runnerId != null) {
         updateData['runnerId'] = runnerId;
       }
+      
+      if (newStatus == 'COMPLETED') {
+        updateData['completedAt'] = FieldValue.serverTimestamp();
+      }
+      
+      if (paymentVerified != null) {
+        updateData['paymentVerified'] = paymentVerified;
+      }
+      
       await firestore.collection('tasks').doc(taskId).update(updateData);
     } catch (e) {
       throw Exception('Failed to update task: $e');
     }
+  }
+
+  Stream<List<TaskModel>> getTasksByRunner(String runnerId) {
+    if (!AppMode.backendEnabled) {
+      return Stream.value([]);
+    }
+
+    return FirebaseFirestore.instance
+        .collection('tasks')
+        .where('runnerId', isEqualTo: runnerId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return TaskModel.fromMap(doc.data(), doc.id);
+      }).toList();
+    });
+  }
+
+  Stream<List<TaskModel>> getTasksByRequester(String requesterId) {
+    if (!AppMode.backendEnabled) {
+      return Stream.value([]);
+    }
+
+    return FirebaseFirestore.instance
+        .collection('tasks')
+        .where('requesterId', isEqualTo: requesterId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return TaskModel.fromMap(doc.data(), doc.id);
+      }).toList();
+    });
+  }
+
+  Future<TaskModel?> getTaskById(String taskId) async {
+    if (!AppMode.backendEnabled) {
+      try {
+        return _demoTasks.firstWhere((task) => task.id == taskId);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    final doc = await FirebaseFirestore.instance
+        .collection('tasks')
+        .doc(taskId)
+        .get();
+
+    if (!doc.exists) return null;
+
+    return TaskModel.fromMap(doc.data()!, doc.id);
   }
 }
