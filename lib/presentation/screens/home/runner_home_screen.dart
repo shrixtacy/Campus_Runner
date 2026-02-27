@@ -10,6 +10,7 @@ import '../../../core/config/app_mode.dart';
 import '../../../logic/auth_provider.dart';
 import '../../../logic/task_provider.dart';
 import '../../../logic/campus_provider.dart';
+import '../../../logic/location_provider.dart';
 import '../../../core/utils/formatters.dart';
 import '../auth/login_screen.dart';
 import '../../widgets/cards/task_card.dart';
@@ -302,6 +303,21 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                                         if (currentUser == null) {
                                           throw Exception('User not authenticated');
                                         }
+
+                                        final locationService = ref.read(locationServiceProvider);
+                                        final hasPermission = await locationService.requestLocationPermission();
+                                        
+                                        if (!hasPermission) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Location permission required for tracking'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          }
+                                          return;
+                                        }
                                         
                                         await ref
                                             .read(taskRepositoryProvider)
@@ -311,13 +327,15 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                                               runnerId: currentUser.uid,
                                             );
 
+                                        locationService.startLocationTracking(task.id);
+
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(
                                             context,
                                           ).showSnackBar(
                                             const SnackBar(
                                               content: Text(
-                                                "Task Accepted! Go get it!",
+                                                "Task Accepted! Location tracking started.",
                                               ),
                                               backgroundColor: Colors.black,
                                             ),

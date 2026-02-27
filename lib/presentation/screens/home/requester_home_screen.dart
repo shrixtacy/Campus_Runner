@@ -17,6 +17,7 @@ import '../../../logic/campus_provider.dart';
 import '../../../logic/task_provider.dart';
 import '../../../logic/storage_provider.dart';
 import '../auth/login_screen.dart';
+import '../tracking/my_tasks_screen.dart';
 
 // 1. Change to ConsumerStatefulWidget
 class RequesterHomeScreen extends ConsumerStatefulWidget {
@@ -307,6 +308,18 @@ class _RequesterHomeScreenState extends ConsumerState<RequesterHomeScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MyTasksScreen(),
+                ),
+              );
+            },
+            icon: Icon(PhosphorIcons.listChecks()),
+            tooltip: 'My Tasks',
+          ),
           IconButton(
             onPressed: _toggleListening,
             icon: Icon(
