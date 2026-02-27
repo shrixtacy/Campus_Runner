@@ -321,10 +321,11 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                                         
                                         await ref
                                             .read(taskRepositoryProvider)
-                                            .updateTaskStatus(
-                                              task.id,
-                                              'IN_PROGRESS',
+                                            .acceptTask(
+                                              taskId: task.id,
                                               runnerId: currentUser.uid,
+                                              runnerName: currentUser.displayName ?? 'Runner',
+                                              runnerPhone: currentUser.phoneNumber ?? '',
                                             );
 
                                         locationService.startLocationTracking(task.id);
