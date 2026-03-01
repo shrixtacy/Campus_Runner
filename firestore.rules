@@ -87,10 +87,12 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       
       allow create: if isAuthenticated() 
-        && request.auth.uid == userId;
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['email', 'displayName', 'phoneNumber', 'campusId', 'campusName', 'role', 'joinedAt']);
       
       allow update: if isAuthenticated() 
-        && request.auth.uid == userId;
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['rating', 'totalRatings', 'completedTasks', 'userId', 'email', 'joinedAt']);
       
       allow delete: if isAuthenticated() 
         && request.auth.uid == userId;
