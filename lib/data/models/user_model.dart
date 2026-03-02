@@ -1,4 +1,4 @@
-enum UserRole { RUNNER, REQUESTER, BOTH }
+enum UserRole { runner, requester, both }
 
 class UserModel {
   final String userId;
@@ -12,6 +12,7 @@ class UserModel {
   final double rating;
   final int totalRatings;
   final int completedTasks;
+  final double totalEarnings;
   final DateTime joinedAt;
   final bool isVerified;
   final bool isActive;
@@ -29,6 +30,7 @@ class UserModel {
     this.rating = 0.0,
     this.totalRatings = 0,
     this.completedTasks = 0,
+    this.totalEarnings = 0.0,
     required this.joinedAt,
     this.isVerified = false,
     this.isActive = true,
@@ -46,11 +48,12 @@ class UserModel {
       campusName: map['campusName'] ?? 'Unknown Campus',
       role: UserRole.values.firstWhere(
         (e) => e.name == map['role'],
-        orElse: () => UserRole.BOTH,
+        orElse: () => UserRole.both,
       ),
       rating: (map['rating'] ?? 0.0).toDouble(),
       totalRatings: map['totalRatings'] ?? 0,
       completedTasks: map['completedTasks'] ?? 0,
+      totalEarnings: (map['totalEarnings'] ?? 0.0).toDouble(),
       joinedAt: DateTime.fromMillisecondsSinceEpoch(
         map['joinedAt'] ?? DateTime.now().millisecondsSinceEpoch,
       ),
@@ -72,6 +75,7 @@ class UserModel {
       'rating': rating,
       'totalRatings': totalRatings,
       'completedTasks': completedTasks,
+      'totalEarnings': totalEarnings,
       'joinedAt': joinedAt.millisecondsSinceEpoch,
       'isVerified': isVerified,
       'isActive': isActive,
@@ -91,6 +95,7 @@ class UserModel {
     double? rating,
     int? totalRatings,
     int? completedTasks,
+    double? totalEarnings,
     DateTime? joinedAt,
     bool? isVerified,
     bool? isActive,
@@ -108,6 +113,7 @@ class UserModel {
       rating: rating ?? this.rating,
       totalRatings: totalRatings ?? this.totalRatings,
       completedTasks: completedTasks ?? this.completedTasks,
+      totalEarnings: totalEarnings ?? this.totalEarnings,
       joinedAt: joinedAt ?? this.joinedAt,
       isVerified: isVerified ?? this.isVerified,
       isActive: isActive ?? this.isActive,

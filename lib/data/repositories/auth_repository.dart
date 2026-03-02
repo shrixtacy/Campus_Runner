@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/config/app_mode.dart';
 import '../models/user_model.dart';
 import 'user_repository.dart';
@@ -67,7 +66,6 @@ class AuthRepository {
         return const AuthResult(errorMessage: 'Authentication failed');
       }
 
-      final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
       final userExists = await _userRepository.userExists(user.uid);
 
       UserModel? userProfile;
@@ -81,7 +79,7 @@ class AuthRepository {
           photoUrl: user.photoURL,
           campusId: 'vit-bhopal',
           campusName: 'VIT Bhopal',
-          role: UserRole.BOTH,
+          role: UserRole.both,
           joinedAt: DateTime.now(),
         );
 

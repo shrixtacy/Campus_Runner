@@ -145,7 +145,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<UserRole>(
-              value: _selectedRole,
+              initialValue: _selectedRole,
               decoration: InputDecoration(
                 labelText: 'Role',
                 prefixIcon: Icon(PhosphorIcons.userSwitch()),
@@ -182,11 +182,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   String _getRoleLabel(UserRole role) {
     switch (role) {
-      case UserRole.RUNNER:
+      case UserRole.runner:
         return 'Runner Only';
-      case UserRole.REQUESTER:
+      case UserRole.requester:
         return 'Requester Only';
-      case UserRole.BOTH:
+      case UserRole.both:
         return 'Both Runner & Requester';
     }
   }

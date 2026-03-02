@@ -23,8 +23,8 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   LatLng? _runnerPosition;
   LatLng? _pickupPosition;
   LatLng? _dropPosition;
-  Set<Marker> _markers = {};
-  Set<Polyline> _polylines = {};
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polylines = {};
 
   @override
   void initState() {
@@ -34,8 +34,8 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   }
 
   void _initializeLocations() {
-    final pickupCoords = AppConstants.locationCoordinates[widget.task.pickup];
-    final dropCoords = AppConstants.locationCoordinates[widget.task.drop];
+    final pickupCoords = AppConstants.zoneCoordinates[widget.task.pickup];
+    final dropCoords = AppConstants.zoneCoordinates[widget.task.drop];
 
     if (pickupCoords != null) {
       _pickupPosition = LatLng(pickupCoords[0], pickupCoords[1]);

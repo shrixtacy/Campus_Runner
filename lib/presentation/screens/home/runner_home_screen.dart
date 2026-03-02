@@ -57,12 +57,14 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
       // Use externalApplication mode to open the PDF in the device's native viewer
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Could not open document."),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Could not open document."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -349,16 +351,18 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                                           );
                                         }
                                       } catch (e) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              "Error accepting task: $e",
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                "Error accepting task: $e",
+                                              ),
+                                              backgroundColor: Colors.red,
                                             ),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
+                                          );
+                                        }
                                       }
                                     },
                                     style: ElevatedButton.styleFrom(
