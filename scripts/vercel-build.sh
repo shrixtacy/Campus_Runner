@@ -4,7 +4,7 @@ set -euo pipefail
 git clone https://github.com/flutter/flutter.git -b stable --depth 1
 ./flutter/bin/flutter config --enable-web
 ./flutter/bin/flutter pub get
-./flutter/bin/flutter build web --release --web-renderer canvaskit \
+./flutter/bin/flutter build web --release \
   --dart-define=ENABLE_BACKEND="${ENABLE_BACKEND:-false}" \
   --dart-define=FIREBASE_API_KEY="${FIREBASE_API_KEY:-}" \
   --dart-define=FIREBASE_APP_ID="${FIREBASE_APP_ID:-}" \
