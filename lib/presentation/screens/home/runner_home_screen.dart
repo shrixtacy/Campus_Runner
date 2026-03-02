@@ -11,6 +11,7 @@ import '../../../logic/auth_provider.dart';
 import '../../../logic/task_provider.dart';
 import '../../../logic/campus_provider.dart';
 import '../../../logic/location_provider.dart';
+import '../../../logic/user_provider.dart';
 import '../../../core/utils/formatters.dart';
 import '../auth/login_screen.dart';
 import '../../widgets/cards/task_card.dart';
@@ -304,6 +305,11 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                                           throw Exception('User not authenticated');
                                         }
 
+                                        final userProfile = await ref.read(userRepositoryProvider).getUserProfile(currentUser.uid);
+                                        if (userProfile == null) {
+                                          throw Exception('User profile not found');
+                                        }
+
                                         final locationService = ref.read(locationServiceProvider);
                                         final hasPermission = await locationService.requestLocationPermission();
                                         
@@ -324,8 +330,8 @@ class _RunnerHomeScreenState extends ConsumerState<RunnerHomeScreen> {
                                             .acceptTask(
                                               taskId: task.id,
                                               runnerId: currentUser.uid,
-                                              runnerName: currentUser.displayName ?? 'Runner',
-                                              runnerPhone: currentUser.phoneNumber ?? '',
+                                              runnerName: userProfile.displayName,
+                                              runnerPhone: userProfile.phoneNumber,
                                             );
 
                                         locationService.startLocationTracking(task.id);
