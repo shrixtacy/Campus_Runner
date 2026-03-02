@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/config/app_mode.dart';
 import '../models/task_model.dart';
+import '../services/pagination_helper.dart';
 
 class TaskRepository {
   static final List<TaskModel> _demoTasks = [
@@ -253,6 +254,38 @@ class TaskRepository {
         return TaskModel.fromMap(doc.data(), doc.id);
       }).toList();
     });
+  }
+
+  PaginationHelper<TaskModel> createTasksPagination({
+    String? campusId,
+    String? status,
+    String? runnerId,
+    String? requesterId,
+  }) {
+    return PaginationHelper<TaskModel>(
+      queryBuilder: () {
+        var query = FirebaseFirestore.instance.collection('tasks').where(
+              'status',
+              isEqualTo: status ?? 'OPEN',
+            );
+
+        if (campusId != null && campusId.isNotEmpty && campusId != 'all') {
+          query = query.where('campusId', isEqualTo: campusId);
+        }
+
+        if (runnerId != null) {
+          query = query.where('runnerId', isEqualTo: runnerId);
+        }
+
+        if (requesterId != null) {
+          query = query.where('requesterId', isEqualTo: requesterId);
+        }
+
+        return query.orderBy('createdAt', descending: true);
+      },
+      itemBuilder: (doc) =>
+          TaskModel.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+    );
   }
 
   Future<TaskModel?> getTaskById(String taskId) async {

@@ -83,8 +83,8 @@ class ProfileScreen extends ConsumerWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        colors.primaryContainer.withOpacity(0.35),
-                        colors.secondaryContainer.withOpacity(0.25),
+                        colors.primaryContainer.withValues(alpha: 0.35),
+                        colors.secondaryContainer.withValues(alpha: 0.25),
                         colors.surface,
                       ],
                     ),
@@ -99,9 +99,9 @@ class ProfileScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24),
-                        color: colors.surface.withOpacity(0.72),
+                        color: colors.surface.withValues(alpha: 0.72),
                         border: Border.all(
-                          color: colors.outlineVariant.withOpacity(0.3),
+                          color: colors.outlineVariant.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -149,7 +149,7 @@ class ProfileScreen extends ConsumerWidget {
                                     vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: colors.tertiaryContainer.withOpacity(0.7),
+                                    color: colors.tertiaryContainer.withValues(alpha: 0.7),
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
@@ -292,11 +292,11 @@ class ProfileScreen extends ConsumerWidget {
 
   String _getRoleLabel(UserRole role) {
     switch (role) {
-      case UserRole.RUNNER:
+      case UserRole.runner:
         return 'Runner';
-      case UserRole.REQUESTER:
+      case UserRole.requester:
         return 'Requester';
-      case UserRole.BOTH:
+      case UserRole.both:
         return 'Runner';
     }
   }
@@ -322,8 +322,8 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: colors.surface.withOpacity(0.7),
-        border: Border.all(color: colors.outlineVariant.withOpacity(0.35)),
+        color: colors.surface.withValues(alpha: 0.7),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.35)),
       ),
       child: Column(
         children: [
@@ -375,8 +375,8 @@ class _ActionTile extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: colors.surface.withOpacity(0.68),
-            border: Border.all(color: colors.outlineVariant.withOpacity(0.28)),
+            color: colors.surface.withValues(alpha: 0.68),
+            border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.28)),
           ),
           child: Row(
             children: [
@@ -385,7 +385,7 @@ class _ActionTile extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: colors.primaryContainer.withOpacity(0.75),
+                  color: colors.primaryContainer.withValues(alpha: 0.75),
                 ),
                 child: Icon(icon, color: colors.onPrimaryContainer),
               ),

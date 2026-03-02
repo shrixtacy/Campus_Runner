@@ -35,16 +35,36 @@ class TransactionService {
     String transactionId,
     String status, {
     String? transactionReference,
+    String? runnerId,
   }) async {
     final updateData = <String, dynamic>{
       'status': status,
-      if (status == 'COMPLETED') 'completedAt': DateTime.now().millisecondsSinceEpoch,
-      if (transactionReference != null) 'transactionReference': transactionReference,
+      if (status == 'COMPLETED')
+        'completedAt': DateTime.now().millisecondsSinceEpoch,
+      if (transactionReference != null)
+        'transactionReference': transactionReference,
     };
 
-    await _firestore.collection('transactions').doc(transactionId).update(
-          updateData,
-        );
+    await _firestore.runTransaction((transaction) async {
+      final transactionRef =
+          _firestore.collection('transactions').doc(transactionId);
+      final transactionDoc = await transaction.get(transactionRef);
+
+      if (!transactionDoc.exists) return;
+
+      transaction.update(transactionRef, updateData);
+
+      if (status == 'COMPLETED' && runnerId != null) {
+        final amount =
+            double.tryParse(transactionDoc.data()?['amount'] ?? '0') ?? 0;
+        final userRef = _firestore.collection('users').doc(runnerId);
+
+        transaction.update(userRef, {
+          'totalEarnings': FieldValue.increment(amount),
+          'completedTasks': FieldValue.increment(1),
+        });
+      }
+    });
   }
 
   Stream<List<TransactionModel>> getTransactionsByUser(String userId) {
@@ -89,23 +109,19 @@ class TransactionService {
   }
 
   Future<Map<String, dynamic>> getRunnerEarnings(String runnerId) async {
-    final snapshot = await _firestore
-        .collection('transactions')
-        .where('runnerId', isEqualTo: runnerId)
-        .where('status', isEqualTo: 'COMPLETED')
-        .get();
+    final userDoc = await _firestore.collection('users').doc(runnerId).get();
 
-    double totalEarnings = 0;
-    int completedTasks = snapshot.docs.length;
-
-    for (var doc in snapshot.docs) {
-      final amount = double.tryParse(doc.data()['amount'] ?? '0') ?? 0;
-      totalEarnings += amount;
+    if (userDoc.exists) {
+      final data = userDoc.data()!;
+      return {
+        'totalEarnings': data['totalEarnings'] ?? 0.0,
+        'completedTasks': data['completedTasks'] ?? 0,
+      };
     }
 
     return {
-      'totalEarnings': totalEarnings,
-      'completedTasks': completedTasks,
+      'totalEarnings': 0.0,
+      'completedTasks': 0,
     };
   }
 }

@@ -158,7 +158,7 @@ class _TaskItem extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Created ${Formatters.timeAgo(task.createdAt)}',
+            'Created ${AppFormatters.formatTimeAgo(task.createdAt)}',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
